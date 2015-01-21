@@ -1,6 +1,6 @@
 import daemon
 
-from rest import main
+from rest import *
 
 with daemon.DaemonContext():
-    main()
+    rest.start()
