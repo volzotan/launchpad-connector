@@ -6,9 +6,13 @@ import requests
 import time
 import json
 
-class Rest():
+class Rest(object):
 
-    CONFIG_FILE = "config.json"
+    CONFIG_FILE = "rest.config"
+
+    def __init__(self):
+        self.readConfigFile()
+
 
     def readConfigFile(self):
         self.config = json.load(open(self.CONFIG_FILE))
@@ -19,7 +23,7 @@ class Rest():
             btnCnf = self.config["buttons"][ str(coords[0]) + "/" + str(coords[1]) ]
             lp.lightButton(coords, green=1, red=1)
             for elem in btnCnf["URL"]:
-                if "http://" not in elem:
+                if not (elem.startswith("http://") or elem.startswith("https://")):
                     elem = "http://" + elem
 
                 response = requests.get(elem, auth=(self.config["auth"]["username"], self.config["auth"]["password"]))
@@ -38,32 +42,7 @@ class Rest():
             pass
 
 
-    def loop(self, lp):
-        while True:
-            try:
-                inp = lp.receive()
-                if inp is not None:
-                    coords = inp[1]
-
-                    t = Thread(target=self.work, args=(lp, coords))
-                    t.start()
-
-                else:
-                    time.sleep(0.1)
-            except Exception as e:
-                raise
-
-
-    def main(self):
-        self.readConfigFile()
-        lp = Launchpad()
-        lp.reset()
-
-        self.loop(lp)
-
-
-def start():
-    Rest().main()
-
-if __name__ == "__main__":
-    start()
+    def consume(self, buttonEvent):
+        if buttonEvent.type is Launchpad.BUTTON_PRESSED:
+            t = Thread(target=self.work, args=(buttonEvent.launchpad, buttonEvent.coords))
+            t.start()

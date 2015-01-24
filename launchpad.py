@@ -6,7 +6,7 @@ import logging as logger
 
 # logger = logging.getLogger(__name__)
 
-class Launchpad():    
+class Launchpad(object):    
 
     BUTTON_PRESSED = 0
     BUTTON_RELEASED = 127
@@ -18,6 +18,8 @@ class Launchpad():
             if (midi.get_count() < 1):
                 logger.error("no MIDI device connected")
                 sys.exit(-1)
+        except SystemExit:
+            raise
         except:
             logger.error("MIDI not available")
             sys.exit(-2)
@@ -115,3 +117,9 @@ class Launchpad():
 
     def send(self, msg):
         self.output_stream.write_short(msg[0], msg[1], msg[2])
+
+
+    def close(self):
+        self.input_stream.close()
+        self.output_stream.abort()
+        midi.close()
