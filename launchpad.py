@@ -129,6 +129,7 @@ class Launchpad(object):
 
 
     def close(self):
-        self.input_stream.close()
-        self.output_stream.abort()
-        midi.close()
+        pass
+        # self.input_stream.close()
+        # self.output_stream.abort()
+        # midi.quit()
