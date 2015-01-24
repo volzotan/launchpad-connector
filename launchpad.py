@@ -6,10 +6,18 @@ import logging as logger
 
 # logger = logging.getLogger(__name__)
 
-class Launchpad(object):    
+class ButtonEvent(object):
 
     BUTTON_PRESSED = 0
     BUTTON_RELEASED = 127
+
+    def __init__(self, _lp, _coords, _type):
+        self.launchpad = _lp
+        self.coords = _coords
+        self.type = _type
+
+
+class Launchpad(object):    
 
     def __init__(self):
         midi.init()
@@ -110,7 +118,8 @@ class Launchpad(object):
             inp = self.input_stream.read(1)
 
             # [[[144, 98, 127, 0], 19491]]
-            return [inp[0][0][0], self.decodeButton(inp[0][0][1]), inp[0][0][2]]
+            return ButtonEvent(self, self.decodeButton(inp[0][0][1]), inp[0][0][2] )
+            #return [inp[0][0][0], self.decodeButton(inp[0][0][1]), inp[0][0][2]]
 
         return None
 

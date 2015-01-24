@@ -1,6 +1,6 @@
 import daemon
 
-from rest import *
+from connector import *
 
 with daemon.DaemonContext():
-    rest.start()
+    connector.start()

@@ -1,4 +1,5 @@
-from launchpad import Launchpad
+from launchpad import Launchpad, ButtonEvent
+from connector import Subscriber
 
 from threading import Thread
 
@@ -6,15 +7,12 @@ import requests
 import time
 import json
 
-class Rest(object):
+class Rest(Subscriber):
 
-    CONFIG_FILE = "rest.config"
+    CONFIG_FILE = "subscriber/rest.config"
+
 
     def __init__(self):
-        self.readConfigFile()
-
-
-    def readConfigFile(self):
         self.config = json.load(open(self.CONFIG_FILE))
 
 
@@ -43,6 +41,7 @@ class Rest(object):
 
 
     def consume(self, buttonEvent):
-        if buttonEvent.type is Launchpad.BUTTON_PRESSED:
+        if buttonEvent.type is ButtonEvent.BUTTON_PRESSED:
             t = Thread(target=self.work, args=(buttonEvent.launchpad, buttonEvent.coords))
             t.start()
+            
