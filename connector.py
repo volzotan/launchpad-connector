@@ -5,19 +5,16 @@ import pkgutil, sys
 import time
 import imp, os
 
+import logging
 
-class Subscriber(object):
-
-    def consume(self):
-        pass
-
-    def close(self):
-        pass
+logger = logging.getLogger(__name__)
 
 
 class Connector(object):
 
     def __init__(self):
+        logging.basicConfig(level=logging.INFO)
+
         self.sub = []
         self.handlers = []
 
@@ -37,6 +34,7 @@ class Connector(object):
                 class_object = getattr(module, str(module.__name__).split('.')[-1].title())
                 class_instance = class_object()
                 self.sub.append(class_instance)
+                logger.info("imported subscriber {}".format(class_object))
 
 
     def register_handlers(self):
@@ -45,6 +43,8 @@ class Connector(object):
 
 
     def loop(self):
+        logger.info("event loop running")
+
         while True:
             try:
                 buttonEvent = self.lp.receive()
@@ -61,10 +61,10 @@ class Connector(object):
 
                 self.lp.close()
                 sys.exit(0)
+            except Exception as e:
+                logger.error(e)
+                raise
 
-
-    def start(self):
-        self.loop()
 
 if __name__ == "__main__":
-    Connector().start()
+    Connector().loop()

@@ -2,9 +2,10 @@ from pygame import midi
 from pygame import time
 
 import sys
-import logging as logger
+import logging
 
-# logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
+
 
 class ButtonEvent(object):
 
@@ -32,17 +33,24 @@ class Launchpad(object):
             logger.error("MIDI not available")
             sys.exit(-2)
 
-        self.name = midi.get_device_info(0)[0]
+        self.name = midi.get_device_info(0)[1]
         self.input_stream = midi.Input(0, 16)
         self.output_stream = midi.Output(1, 128)
 
 
-    def encodeLedColor(self, green, red):
+    def _encodeLedColor(self, green, red):
         """Calculate LED colors
 
         GREEN | GREEN | CLEAR | COPY | RED | RED
         5     | 4     | 3     | 2    | 1   | 0
+
+        Brightness values in range 0..3 where
+        0 = off and 3 = full brightness
+
         """
+
+        if (green not in range(0,4) or red not in range(0,4)):
+            raise ValueError("mapping value not in 0 .. 3")
 
         tmp = green << 4
         tmp |= (3 << 2)  # 0b11 -> CLEAR set and COPY set, as advised in manual
@@ -51,16 +59,16 @@ class Launchpad(object):
         return tmp
 
 
-    def decodeButton(self, number):
+    def _decodeButton(self, number):
         return [number % 16, number / 16]
 
 
-    def encodeButton(self, coords):
+    def _encodeButton(self, coords):
         return coords[1] * 16 + coords[0]
 
 
     def lightButton(self, coords, green, red):
-        self.send([144, self.encodeButton(coords), self.encodeLedColor(green, red)])
+        self.send([144, self._encodeButton(coords), self._encodeLedColor(green, red)])
 
 
     def reset(self):
@@ -77,22 +85,22 @@ class Launchpad(object):
         """
 
         if brightness not in range(0,3):
-            raise ValueError("mapping value not in range 0 .. 2")
+            raise ValueError("mapping value not in 0 .. 2")
 
         self.send([176, 0, 125 + brightness])
 
 
-    def selectMapping(self, mapping):
-        """Switch between button mappings
+    # def selectMapping(self, mapping):
+    #     """Switch between button mappings
 
-        1 - default X-Y layout
-        2 - drum rack layout
-        """
+    #     1 - default X-Y layout
+    #     2 - drum rack layout
+    #     """
 
-        if mapping not in range(1,3):
-            raise ValueError("mapping value not in range 1 .. 2")
+    #     if mapping not in range(1,3):
+    #         raise ValueError("mapping value not in 1 .. 2")
 
-        self.send([176, 0, mapping])
+    #     self.send([176, 0, mapping])
 
 
     def doubleBuffer(self, copy, flash, update, display):
@@ -117,9 +125,8 @@ class Launchpad(object):
         if (self.input_stream.poll()):
             inp = self.input_stream.read(1)
 
-            # [[[144, 98, 127, 0], 19491]]
-            return ButtonEvent(self, self.decodeButton(inp[0][0][1]), inp[0][0][2] )
-            #return [inp[0][0][0], self.decodeButton(inp[0][0][1]), inp[0][0][2]]
+            # for example [[[144, 98, 127, 0], 19491]]
+            return ButtonEvent(self, self._decodeButton(inp[0][0][1]), inp[0][0][2] )
 
         return None
 

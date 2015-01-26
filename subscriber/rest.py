@@ -1,5 +1,5 @@
 from launchpad import Launchpad, ButtonEvent
-from connector import Subscriber
+import interfaces
 
 from threading import Thread
 
@@ -7,13 +7,22 @@ import requests
 import time
 import json
 
-class Rest(Subscriber):
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class Rest(interfaces.Subscriber):
 
     CONFIG_FILE = "subscriber/rest.config"
+    BUTTON_LED_DURATION = 1  # in sec
 
 
     def __init__(self):
-        self.config = json.load(open(self.CONFIG_FILE))
+        try:
+            self.config = json.load(open(self.CONFIG_FILE))
+        except Exception as e:
+            logger.error("loading config file failed", e)
 
 
     def work(self, lp, coords):
@@ -25,15 +34,15 @@ class Rest(Subscriber):
                     elem = "http://" + elem
 
                 response = requests.get(elem, auth=(self.config["auth"]["username"], self.config["auth"]["password"]))
-                print response
 
                 if (btnCnf["awaitConfirmation"] == True):
                     if response.status_code == 200:
-                        lp.lightButton(coords, green=1, red=0)
+                        lp.lightButton(coords, green=3, red=0)
                     else:
-                        lp.lightButton(coords, green=0, red=1)
+                        lp.lightButton(coords, green=0, red=3)
+                        logger.warning(response)
                     
-                    time.sleep(1)
+                    time.sleep(self.BUTTON_LED_DURATION)
                 
                 lp.lightButton(coords, green=0, red=0)
         except KeyError:
@@ -44,4 +53,4 @@ class Rest(Subscriber):
         if buttonEvent.type is ButtonEvent.BUTTON_PRESSED:
             t = Thread(target=self.work, args=(buttonEvent.launchpad, buttonEvent.coords))
             t.start()
-            
+
