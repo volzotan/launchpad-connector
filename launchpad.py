@@ -33,9 +33,24 @@ class Launchpad(object):
             logger.error("MIDI not available")
             sys.exit(-2)
 
-        self.name = midi.get_device_info(0)[1]
-        self.input_stream = midi.Input(0, 16)
-        self.output_stream = midi.Output(1, 128)
+        for i in range(0, midi.get_count()):
+            deviceinfo = midi.get_device_info(i)
+            logger.debug(deviceinfo)
+
+            if "Launchpad" in deviceinfo[1]:
+                if (deviceinfo[2] == 1):
+                    self.input_stream = midi.Input(i, 16)
+
+                if (deviceinfo[3] == 1):
+                    self.output_stream = midi.Output(i, 16)
+
+                self.name = deviceinfo[1]
+
+        if (self.input_stream is None and self.output_stream is None):
+            logger.error("no MIDI device is Launchpad")
+            sys.exit(-3)
+        else:
+            logger.info("Launchpad found")
 
 
     def _encodeLedColor(self, green, red):
