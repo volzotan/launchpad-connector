@@ -55,9 +55,9 @@ class Connector(object):
         for x in range (0,9):
             for y in range(0,9):
                 btn_list.append((x,y))
-        random.shuffle(btn_list)
 
         for color in range(1,4):
+            random.shuffle(btn_list)
             for elem in btn_list:
                 green = (color & 2) >> 1
                 red = color & 1
